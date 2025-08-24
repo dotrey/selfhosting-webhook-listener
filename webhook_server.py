@@ -5,21 +5,21 @@ import subprocess
 
 # === CONFIGURATION ===
 WEBHOOK_TOKEN = os.environ.get("WEBHOOK_TOKEN", "")
-REPO_URL = os.environ.get("REPO_URL", "https://github.com/username/your-repo.git")
-REPO_BRANCH = os.environ.get("REPO_BRANCH", "master")
+REPO_URL = os.environ.get("NGINX_REPO_URL", "https://github.com/username/your-repo.git")
+REPO_BRANCH = os.environ.get("NGINX_REPO_BRANCH", "master")
 NGINX_CONTAINER = os.environ.get("NGINX_CONTAINER", "nginx-1")
-LOCAL_PATH = os.environ.get("LOCAL_PATH", "/app/html_root")  # where to clone/pull
+TARGET_PATH = os.environ.get("NGINX_REPO_TARGET", "/app/html_root")  # where to clone/pull
 
 app = Flask(__name__)
 
 def update_repo():
-    if not os.path.exists(LOCAL_PATH):
+    if not os.path.exists(TARGET_PATH):
         # Clone fresh
-        repo = git.Repo.clone_from(REPO_URL, LOCAL_PATH, branch=REPO_BRANCH)
-        print(f"Cloned {REPO_URL} into {LOCAL_PATH}")
+        repo = git.Repo.clone_from(REPO_URL, TARGET_PATH, branch=REPO_BRANCH)
+        print(f"Cloned {REPO_URL} into {TARGET_PATH}")
     else:
         # Pull latest
-        repo = git.Repo(LOCAL_PATH)
+        repo = git.Repo(TARGET_PATH)
         origin = repo.remotes.origin
         origin.fetch()
         repo.git.checkout(REPO_BRANCH)
@@ -27,7 +27,7 @@ def update_repo():
         print(f"Updated branch {REPO_BRANCH}")
 
     # Update submodules
-    subprocess.run(["git", "submodule", "update", "--init", "--recursive"], cwd=LOCAL_PATH)
+    subprocess.run(["git", "submodule", "update", "--init", "--recursive"], cwd=TARGET_PATH)
     print("Submodules updated")
     
     # Reload Nginx
