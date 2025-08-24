@@ -4,8 +4,10 @@ import git
 import subprocess
 
 # === CONFIGURATION ===
+WEBHOOK_TOKEN = os.environ.get("WEBHOOK_TOKEN", "")
 REPO_URL = os.environ.get("REPO_URL", "https://github.com/username/your-repo.git")
-REPO_BRANCH = os.environ.get("REPO_BRANCH", "main")
+REPO_BRANCH = os.environ.get("REPO_BRANCH", "master")
+NGINX_CONTAINER = os.environ.get("NGINX_CONTAINER", "nginx-1")
 LOCAL_PATH = os.environ.get("LOCAL_PATH", "/app/repo")  # where to clone/pull
 
 app = Flask(__name__)
@@ -27,10 +29,20 @@ def update_repo():
     # Update submodules
     subprocess.run(["git", "submodule", "update", "--init", "--recursive"], cwd=LOCAL_PATH)
     print("Submodules updated")
+    
+    # Reload Nginx
+    subprocess.run([
+        "docker", "exec", NGINX_CONTAINER, "nginx", "-s", "reload"
+    ])
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
+        # Check token
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header != f"Bearer {WEBHOOK_TOKEN}":
+            abort(403, "Forbidden: invalid token")
+
         # Optional: validate GitHub secret here if you set one
         update_repo()
         return jsonify({"status": "ok", "message": "Repository updated"}), 200
