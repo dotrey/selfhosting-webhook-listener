@@ -37,12 +37,12 @@ def update_repo():
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
+    # Check token
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header != f"Bearer {WEBHOOK_TOKEN}":
+        abort(403, "Forbidden: invalid token")
+        
     try:
-        # Check token
-        auth_header = request.headers.get("Authorization", "")
-        if auth_header != f"Bearer {WEBHOOK_TOKEN}":
-            abort(403, "Forbidden: invalid token")
-
         # Optional: validate GitHub secret here if you set one
         update_repo()
         return jsonify({"status": "ok", "message": "Repository updated"}), 200
