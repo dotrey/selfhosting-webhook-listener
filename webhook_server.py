@@ -8,7 +8,7 @@ WEBHOOK_TOKEN = os.environ.get("WEBHOOK_TOKEN", "")
 REPO_URL = os.environ.get("REPO_URL", "https://github.com/username/your-repo.git")
 REPO_BRANCH = os.environ.get("REPO_BRANCH", "master")
 NGINX_CONTAINER = os.environ.get("NGINX_CONTAINER", "nginx-1")
-LOCAL_PATH = os.environ.get("LOCAL_PATH", "/app/repo")  # where to clone/pull
+LOCAL_PATH = os.environ.get("LOCAL_PATH", "/app/html_root")  # where to clone/pull
 
 app = Flask(__name__)
 
