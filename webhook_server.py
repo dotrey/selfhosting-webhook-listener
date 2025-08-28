@@ -42,7 +42,7 @@ def update_repo():
     
     client = docker.DockerClient(base_url='unix://var/run/docker.sock')
     container = client.containers.get(NGINX_CONTAINER)
-    print(f"Updating nginx.conf")
+    print(f"Moving {TARGET_PATH}/nginx.conf to /etc/nginx/nginx.conf")
     container.exec_run("mv {TARGET_PATH}/nginx.conf /etc/nginx/nginx.conf")
     print(f"Reloading nginx")
     container.exec_run("nginx -s reload")
