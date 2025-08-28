@@ -65,6 +65,12 @@ def webhook():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
+    # Run once at startup
+    try:
+        update_repo()
+    except Exception as e:
+        print(f"Initial update failed: {e}")
+        
     port = int(os.environ.get("PORT", 5000))
     # Host 0.0.0.0 so it’s reachable from outside container
     app.run(host="0.0.0.0", port=port)
