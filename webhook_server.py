@@ -1,7 +1,8 @@
 from flask import Flask, request, jsonify, abort
 import os
-import git
 import subprocess
+import tempfile
+import shutil
 
 # === CONFIGURATION ===
 WEBHOOK_TOKEN = os.environ.get("WEBHOOK_TOKEN", "")
@@ -13,23 +14,36 @@ TARGET_PATH = os.environ.get("NGINX_REPO_TARGET", "/app/html_root")  # where to 
 app = Flask(__name__)
 
 def update_repo():
-    if not os.path.exists(TARGET_PATH):
-        # Clone fresh
-        repo = git.Repo.clone_from(REPO_URL, TARGET_PATH, branch=REPO_BRANCH)
-        print(f"Cloned {REPO_URL} into {TARGET_PATH}")
-    else:
-        # Pull latest
-        repo = git.Repo(TARGET_PATH)
-        origin = repo.remotes.origin
-        origin.fetch()
-        repo.git.checkout(REPO_BRANCH)
-        origin.pull()
-        print(f"Updated branch {REPO_BRANCH}")
+    # Create temporary directory for the fresh clone
+    with tempfile.TemporaryDirectory() as tmpdir:
+        print(f"Cloning {REPO_URL}@{REPO_BRANCH} into temp dir: {tmpdir}")
+        subprocess.run(
+            ["git", "clone", "--branch", REPO_BRANCH, "--depth", "1", REPO_URL, tmpdir],
+            check=True
+        )
 
-    # Update submodules
-    subprocess.run(["git", "submodule", "update", "--init", "--recursive"], cwd=TARGET_PATH)
-    print("Submodules updated")
+        # Update submodules inside the temp clone
+        subprocess.run(
+            ["git", "submodule", "update", "--init", "--recursive"],
+            cwd=tmpdir,
+            check=True
+        )
+        print("Submodules updated in temporary clone")
+
+        # Remove the old target directory
+        if os.path.exists(TARGET_PATH):
+            print(f"Removing old target directory: {TARGET_PATH}")
+            shutil.rmtree(TARGET_PATH)
+
+        # Move the new clone into place
+        print(f"Moving new clone to target: {TARGET_PATH}")
+        shutil.move(tmpdir, TARGET_PATH)
     
+    # Move nginx config file
+    subprocess.run([
+        "docker", "exec", NGINX_CONTAINER, "mv", "{TARGET_PATH}/nginx.conf", "/etc/nginx/nginx.conf"
+    ])
+
     # Reload Nginx
     subprocess.run([
         "docker", "exec", NGINX_CONTAINER, "nginx", "-s", "reload"
@@ -41,7 +55,7 @@ def webhook():
     auth_header = request.headers.get("Authorization", "")
     if auth_header != f"Bearer {WEBHOOK_TOKEN}":
         abort(403, "Forbidden: invalid token")
-        
+
     try:
         # Optional: validate GitHub secret here if you set one
         update_repo()
