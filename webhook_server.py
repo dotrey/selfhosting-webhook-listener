@@ -11,7 +11,7 @@ WEBHOOK_FOLDER = os.environ.get("WEBHOOK_FOLDER", "/app/shared/html")
 REPO_URL = os.environ.get("NGINX_REPO_URL", "https://github.com/username/your-repo.git")
 REPO_BRANCH = os.environ.get("NGINX_REPO_BRANCH", "master")
 NGINX_CONTAINER = os.environ.get("NGINX_CONTAINER", "nginx-1")
-NGINX_FOLDER = os.environ.get("NGINX_REPO_TARGET", "/app/shared/html")
+NGINX_FOLDER = os.environ.get("NGINX_FOLDER", "/app/shared/html")
 
 app = Flask(__name__)
 
