@@ -7,10 +7,11 @@ import docker
 
 # === CONFIGURATION ===
 WEBHOOK_TOKEN = os.environ.get("WEBHOOK_TOKEN", "")
+WEBHOOK_FOLDER = os.environ.get("WEBHOOK_FOLDER", "/app/shared/html")
 REPO_URL = os.environ.get("NGINX_REPO_URL", "https://github.com/username/your-repo.git")
 REPO_BRANCH = os.environ.get("NGINX_REPO_BRANCH", "master")
 NGINX_CONTAINER = os.environ.get("NGINX_CONTAINER", "nginx-1")
-TARGET_PATH = os.environ.get("NGINX_REPO_TARGET", "/app/shared/nginx")  # where to clone/pull
+NGINX_FOLDER = os.environ.get("NGINX_REPO_TARGET", "/app/shared/html")
 
 app = Flask(__name__)
 
@@ -32,18 +33,18 @@ def update_repo():
         print("Submodules updated in temporary clone")
 
         # Remove the old target directory
-        if os.path.exists(TARGET_PATH):
-            print(f"Removing old target directory: {TARGET_PATH}")
-            shutil.rmtree(TARGET_PATH)
+        if os.path.exists(WEBHOOK_FOLDER):
+            print(f"Removing old target directory: {WEBHOOK_FOLDER}")
+            shutil.rmtree(WEBHOOK_FOLDER)
 
         # Move the new clone into place
-        print(f"Moving new clone to target: {TARGET_PATH}")
-        shutil.move(tmpdir, TARGET_PATH)
+        print(f"Moving new clone to target: {WEBHOOK_FOLDER}")
+        shutil.move(tmpdir, WEBHOOK_FOLDER)
     
     client = docker.DockerClient(base_url='unix://var/run/docker.sock')
     container = client.containers.get(NGINX_CONTAINER)
-    print(f"Moving {TARGET_PATH}/nginx.conf to /etc/nginx/nginx.conf")
-    copy_result =  container.exec_run(f"mv {TARGET_PATH}/nginx.conf /etc/nginx/nginx.conf")
+    print(f"Moving {NGINX_FOLDER}/nginx.conf to /etc/nginx/nginx.conf")
+    copy_result =  container.exec_run(f"mv {NGINX_FOLDER}/nginx.conf /etc/nginx/nginx.conf")
     print("move output:", copy_result.output.decode('utf-8'))
     print(f"Reloading nginx")
     reload_result = container.exec_run("nginx -s reload")
