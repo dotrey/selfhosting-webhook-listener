@@ -17,7 +17,7 @@ app = Flask(__name__)
 def update_repo():
     # Create temporary directory for the fresh clone
     with tempfile.TemporaryDirectory() as tmpdir:
-        print(f"Cloning {REPO_URL}@{REPO_BRANCH} into temp dir: {tmpdir}")
+        print(f"Cloning {REPO_BRANCH} into temp dir: {tmpdir}")
         subprocess.run(
             ["git", "clone", "--branch", REPO_BRANCH, "--depth", "1", REPO_URL, tmpdir],
             check=True
@@ -42,7 +42,9 @@ def update_repo():
     
     client = docker.DockerClient(base_url='unix://var/run/docker.sock')
     container = client.containers.get(NGINX_CONTAINER)
+    print(f"Updating nginx.conf")
     container.exec_run("mv {TARGET_PATH}/nginx.conf /etc/nginx/nginx.conf")
+    print(f"Reloading nginx")
     container.exec_run("nginx -s reload")
     
 
