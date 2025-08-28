@@ -9,7 +9,7 @@ WEBHOOK_TOKEN = os.environ.get("WEBHOOK_TOKEN", "")
 REPO_URL = os.environ.get("NGINX_REPO_URL", "https://github.com/username/your-repo.git")
 REPO_BRANCH = os.environ.get("NGINX_REPO_BRANCH", "master")
 NGINX_CONTAINER = os.environ.get("NGINX_CONTAINER", "nginx-1")
-TARGET_PATH = os.environ.get("NGINX_REPO_TARGET", "/app/html_root")  # where to clone/pull
+TARGET_PATH = os.environ.get("NGINX_REPO_TARGET", "/app/shared/nginx")  # where to clone/pull
 
 app = Flask(__name__)
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         update_repo()
     except Exception as e:
         print(f"Initial update failed: {e}")
-        
+
     port = int(os.environ.get("PORT", 5000))
     # Host 0.0.0.0 so it’s reachable from outside container
     app.run(host="0.0.0.0", port=port)
