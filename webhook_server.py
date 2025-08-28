@@ -44,7 +44,7 @@ def update_repo():
     container = client.containers.get(NGINX_CONTAINER)
     print(f"Moving {TARGET_PATH}/nginx.conf to /etc/nginx/nginx.conf")
     copy_result =  container.exec_run(f"mv {TARGET_PATH}/nginx.conf /etc/nginx/nginx.conf")
-    print("copy output:", copy_result.output.decode('utf-8'))
+    print("move output:", copy_result.output.decode('utf-8'))
     print(f"Reloading nginx")
     reload_result = container.exec_run("nginx -s reload")
     print("reload output:", reload_result.output.decode('utf-8'))
