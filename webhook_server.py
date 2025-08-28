@@ -3,6 +3,7 @@ import os
 import subprocess
 import tempfile
 import shutil
+import docker
 
 # === CONFIGURATION ===
 WEBHOOK_TOKEN = os.environ.get("WEBHOOK_TOKEN", "")
@@ -39,15 +40,11 @@ def update_repo():
         print(f"Moving new clone to target: {TARGET_PATH}")
         shutil.move(tmpdir, TARGET_PATH)
     
-    # Move nginx config file
-    subprocess.run([
-        "docker", "exec", NGINX_CONTAINER, "mv", "{TARGET_PATH}/nginx.conf", "/etc/nginx/nginx.conf"
-    ])
-
-    # Reload Nginx
-    subprocess.run([
-        "docker", "exec", NGINX_CONTAINER, "nginx", "-s", "reload"
-    ])
+    client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+    container = client.containers.get(NGINX_CONTAINER)
+    container.exec_run("mv {TARGET_PATH}/nginx.conf /etc/nginx/nginx.conf")
+    container.exec_run("nginx -s reload")
+    
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
