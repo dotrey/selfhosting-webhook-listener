@@ -43,9 +43,11 @@ def update_repo():
     client = docker.DockerClient(base_url='unix://var/run/docker.sock')
     container = client.containers.get(NGINX_CONTAINER)
     print(f"Moving {TARGET_PATH}/nginx.conf to /etc/nginx/nginx.conf")
-    container.exec_run("mv {TARGET_PATH}/nginx.conf /etc/nginx/nginx.conf")
+    copy_result =  container.exec_run("mv {TARGET_PATH}/nginx.conf /etc/nginx/nginx.conf")
+    print("copy output:", copy_result.output.decode('utf-8'))
     print(f"Reloading nginx")
-    container.exec_run("nginx -s reload")
+    reload_result = container.exec_run("nginx -s reload")
+    print("reload output:", reload_result.output.decode('utf-8'))
     
 
 @app.route("/webhook", methods=["POST"])
