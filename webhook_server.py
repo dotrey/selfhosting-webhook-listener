@@ -12,6 +12,7 @@ REPO_URL = os.environ.get("NGINX_REPO_URL", "https://github.com/username/your-re
 REPO_BRANCH = os.environ.get("NGINX_REPO_BRANCH", "master")
 NGINX_CONTAINER = os.environ.get("NGINX_CONTAINER", "nginx-1")
 NGINX_FOLDER = os.environ.get("NGINX_FOLDER", "/app/shared/html")
+NGINX_USER = os.environ.get("NGINX_USER", "nginx")
 
 app = Flask(__name__)
 
@@ -43,9 +44,15 @@ def update_repo():
     
     client = docker.DockerClient(base_url='unix://var/run/docker.sock')
     container = client.containers.get(NGINX_CONTAINER)
+
     print(f"Moving {NGINX_FOLDER}/nginx.conf to /etc/nginx/nginx.conf")
     copy_result =  container.exec_run(f"mv {NGINX_FOLDER}/nginx.conf /etc/nginx/nginx.conf")
-    print("move output:", copy_result.output.decode('utf-8'))
+    print("move output:", copy_result.output.decode('utf-8'))    
+
+    print(f"Adjusting permissions of {NGINX_FOLDER} for {NGINX_USER}")
+    permission_result =  container.exec_run(f"chown {NGINX_USER}:{NGINX_USER} {NGINX_FOLDER}")
+    print("permission output:", permission_result.output.decode('utf-8'))
+
     print(f"Reloading nginx")
     reload_result = container.exec_run("nginx -s reload")
     print("reload output:", reload_result.output.decode('utf-8'))
