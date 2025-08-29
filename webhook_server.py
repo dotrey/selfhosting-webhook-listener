@@ -6,6 +6,8 @@ import shutil
 import docker
 
 # === CONFIGURATION ===
+GITHUB_USER = os.environ.get("GITHUB_USER", "")
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 WEBHOOK_TOKEN = os.environ.get("WEBHOOK_TOKEN", "")
 WEBHOOK_FOLDER = os.environ.get("WEBHOOK_FOLDER", "/app/shared/html")
 REPO_URL = os.environ.get("NGINX_REPO_URL", "https://github.com/username/your-repo.git")
@@ -17,6 +19,18 @@ NGINX_USER = os.environ.get("NGINX_USER", "nginx")
 app = Flask(__name__)
 
 def update_repo():
+    # Store credentials for private repos
+    subprocess.run(
+        ["git", "config", "--global", "credential.helper", "store"], 
+        check=True
+    )
+    cred_input = f"""url=https://github.com\nusername={GITHUB_USER}\npassword={GITHUB_TOKEN}"""
+    subprocess.run(
+        ["git", "credential", "approve"],
+        input=cred_input.encode(),
+        check=True
+    )
+
     # Create temporary directory for the fresh clone
     with tempfile.TemporaryDirectory() as tmpdir:
         print(f"Cloning {REPO_BRANCH} into temp dir: {tmpdir}")
@@ -42,6 +56,9 @@ def update_repo():
         print(f"Moving new clone to target: {WEBHOOK_FOLDER}")
         shutil.move(tmpdir, WEBHOOK_FOLDER)
     
+    # Remove stored git credentials
+    subprocess.run(["rm", "-f", os.path.expanduser("~/.git-credentials")])
+
     client = docker.DockerClient(base_url='unix://var/run/docker.sock')
     container = client.containers.get(NGINX_CONTAINER)
 
