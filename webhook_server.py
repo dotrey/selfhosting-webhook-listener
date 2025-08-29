@@ -16,9 +16,6 @@ NGINX_FOLDER = os.environ.get("NGINX_FOLDER", "/app/shared/html")
 app = Flask(__name__)
 
 def update_repo():
-    print("Starting repository update...")
-    debug = subprocess.run(["printenv"], capture_output=True, text=True)
-    print(debug.stdout)
     # Create temporary directory for the fresh clone
     with tempfile.TemporaryDirectory() as tmpdir:
         print(f"Cloning {REPO_BRANCH} into temp dir: {tmpdir}")
@@ -78,4 +75,4 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 5000))
     # Host 0.0.0.0 so it’s reachable from outside container
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=False)
