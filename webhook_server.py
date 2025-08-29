@@ -19,6 +19,8 @@ def update_repo():
     # Create temporary directory for the fresh clone
     with tempfile.TemporaryDirectory() as tmpdir:
         print(f"Cloning {REPO_BRANCH} into temp dir: {tmpdir}")
+        debug = subprocess.run(["printenv"], capture_output=True, text=True)
+        print(debug.stdout)
         subprocess.run(
             ["git", "clone", "--branch", REPO_BRANCH, "--depth", "1", REPO_URL, tmpdir],
             check=True
