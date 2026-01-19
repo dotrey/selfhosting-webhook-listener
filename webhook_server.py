@@ -41,7 +41,7 @@ def update_repo():
 
         # Update submodules inside the temp clone
         subprocess.run(
-            ["git", "submodule", "update", "--init", "--recursive"],
+            ["git", "submodule", "update", "--init", "--remote", "--recursive"],
             cwd=tmpdir,
             check=True
         )
